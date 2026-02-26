@@ -41,7 +41,25 @@ Mesmos parametros de `buscar_precedentes`.
 
 Lista todos os tipos de precedentes disponiveis com seus codigos.
 
-## Pre-requisito
+## Instalacao Rapida (automatica)
+
+### Windows (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/georgemarmelstein/bnp-api/main/install.ps1 | iex"
+```
+
+### macOS/Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/georgemarmelstein/bnp-api/main/install.sh | bash
+```
+
+Os scripts fazem tudo automaticamente: verificam/instalam o `uv`, adicionam o servidor ao `claude_desktop_config.json` (preservando servidores existentes) e orientam a reiniciar o Claude Desktop.
+
+## Instalacao Manual
+
+### Pre-requisito
 
 Instale o [uv](https://docs.astral.sh/uv/getting-started/installation/) (gerenciador de pacotes Python):
 
@@ -52,8 +70,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Windows (PowerShell)
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
-
-## Instalacao
 
 ### Claude Desktop
 
@@ -141,6 +157,64 @@ Para usar no Claude Desktop a partir do clone local:
   }
 }
 ```
+
+### Instalacao via Agente com Acesso a Terminal
+
+Se voce esta usando um assistente de IA com acesso a terminal (PowerShell, bash, etc.) e quer que ele instale este servidor automaticamente, estas sao as instrucoes precisas.
+
+**Windows (PowerShell):**
+
+```powershell
+# 1. Verificar se uv esta instalado
+uv --version
+
+# Se nao estiver, instalar:
+irm https://astral.sh/uv/install.ps1 | iex
+
+# 2. Ler config existente, fazer merge, salvar
+$configPath = "$env:APPDATA\Claude\claude_desktop_config.json"
+$config = if (Test-Path $configPath) { Get-Content $configPath -Raw | ConvertFrom-Json } else { [PSCustomObject]@{} }
+if (-not $config.mcpServers) { $config | Add-Member -NotePropertyName "mcpServers" -NotePropertyValue ([PSCustomObject]@{}) }
+$config.mcpServers | Add-Member -NotePropertyName "bnp-api" -NotePropertyValue ([PSCustomObject]@{
+    command = "uvx"
+    args = @("--from", "git+https://github.com/georgemarmelstein/bnp-api.git", "bnp-api")
+}) -Force
+$config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
+
+# 3. Informar que precisa reiniciar o Claude Desktop
+```
+
+**macOS/Linux (bash):**
+
+```bash
+# 1. Verificar se uv esta instalado
+uv --version || curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Ler config existente, fazer merge, salvar
+CONFIG_PATH="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+# Linux: CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/Claude/claude_desktop_config.json"
+mkdir -p "$(dirname "$CONFIG_PATH")"
+[ -f "$CONFIG_PATH" ] || echo '{}' > "$CONFIG_PATH"
+
+python3 -c "
+import json, os
+path = os.path.expanduser('$CONFIG_PATH')
+with open(path) as f: config = json.load(f)
+config.setdefault('mcpServers', {})
+config['mcpServers']['bnp-api'] = {
+    'command': 'uvx',
+    'args': ['--from', 'git+https://github.com/georgemarmelstein/bnp-api.git', 'bnp-api']
+}
+with open(path, 'w') as f: json.dump(config, f, indent=2)
+"
+
+# 3. Informar que precisa reiniciar o Claude Desktop
+```
+
+**Pontos criticos para o agente:**
+- O `claude_desktop_config.json` pode ja ter outros servidores MCP. **Nunca sobrescreva** o arquivo inteiro — faca merge no campo `mcpServers`.
+- Apos modificar o arquivo, o usuario precisa **fechar e reiniciar** o Claude Desktop para que o novo servidor seja carregado.
+- O servidor comunica via **stdio** (stdin/stdout). Nao e necessario abrir portas ou configurar rede.
 
 ## Guia de Pesquisa
 
