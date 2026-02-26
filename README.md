@@ -2,7 +2,7 @@
 
 Servidor [MCP](https://modelcontextprotocol.io) (Model Context Protocol) que fornece acesso ao **Banco Nacional de Precedentes** (BNP/PAGEA) do Conselho Nacional de Justica (CNJ).
 
-Permite buscar precedentes vinculantes de todos os tribunais brasileiros diretamente a partir do Claude Desktop, Claude Web ou Claude Code.
+Permite buscar precedentes vinculantes de todos os tribunais brasileiros diretamente a partir do Claude Desktop ou Claude Code.
 
 ## O que e o BNP?
 
@@ -41,50 +41,25 @@ Mesmos parametros de `buscar_precedentes`.
 
 Lista todos os tipos de precedentes disponiveis com seus codigos.
 
+## Pre-requisito
+
+Instale o [uv](https://docs.astral.sh/uv/getting-started/installation/) (gerenciador de pacotes Python):
+
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
 ## Instalacao
 
 ### Claude Desktop
 
-Adicione ao arquivo de configuracao do Claude Desktop:
-
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "bnp-api": {
-      "command": "uvx",
-      "args": ["bnp-api"]
-    }
-  }
-}
-```
-
-### Claude Code
-
-Adicione ao `settings.json` do Claude Code (global ou projeto):
-
-```json
-{
-  "mcpServers": {
-    "bnp-api": {
-      "command": "uvx",
-      "args": ["bnp-api"]
-    }
-  }
-}
-```
-
-Ou via CLI:
-
-```bash
-claude mcp add bnp-api -- uvx bnp-api
-```
-
-### Instalacao via Git (sem PyPI)
-
-Se o pacote ainda nao estiver publicado no PyPI, use diretamente do repositorio:
+1. Abra o Claude Desktop
+2. Va em **Settings > Developer > Edit Config**
+3. Adicione a configuracao abaixo ao arquivo `claude_desktop_config.json`:
 
 ```json
 {
@@ -97,6 +72,55 @@ Se o pacote ainda nao estiver publicado no PyPI, use diretamente do repositorio:
 }
 ```
 
+4. Feche completamente e reinicie o Claude Desktop
+
+> **Nota:** Quando o pacote estiver publicado no PyPI, a configuracao simplifica para:
+> ```json
+> {
+>   "mcpServers": {
+>     "bnp-api": {
+>       "command": "uvx",
+>       "args": ["bnp-api"]
+>     }
+>   }
+> }
+> ```
+
+**Localizacao do arquivo de configuracao:**
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+### Claude Code
+
+Via CLI (recomendado):
+
+```bash
+claude mcp add bnp-api -- uvx --from git+https://github.com/georgemarmelstein/bnp-api.git bnp-api
+```
+
+Ou adicione manualmente ao `settings.json` do Claude Code:
+
+```json
+{
+  "mcpServers": {
+    "bnp-api": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/georgemarmelstein/bnp-api.git", "bnp-api"]
+    }
+  }
+}
+```
+
+Para verificar se o servidor foi adicionado:
+
+```bash
+claude mcp list
+```
+
+### Claude Web (claude.ai)
+
+O Claude Web suporta apenas servidores MCP **remotos** (HTTP/SSE) via **Settings > Connectors**. Este servidor opera localmente via stdio e nao e compativel diretamente com o Claude Web. Para uso no Claude Web, seria necessario hospedar o servidor com transporte HTTP/SSE.
+
 ### Desenvolvimento Local
 
 ```bash
@@ -105,7 +129,7 @@ cd bnp-api
 uv run bnp-api
 ```
 
-Ou no Claude Desktop:
+Para usar no Claude Desktop a partir do clone local:
 
 ```json
 {
