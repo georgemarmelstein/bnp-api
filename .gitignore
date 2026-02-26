@@ -8,4 +8,4 @@ build/
 .venv/
 venv/
 .env
-*.lock
+poetry.lock

@@ -158,8 +158,8 @@ def _montar_filtro(
     busca: str, orgaos: str, tipos: str, max_resultados: int
 ) -> dict:
     """Monta o filtro de busca para a API do BNP."""
-    lista_orgaos = [o.strip().upper() for o in orgaos.split(",")]
-    lista_tipos = [t.strip().upper() for t in tipos.split(",")]
+    lista_orgaos = [o.strip().upper() for o in orgaos.split(",") if o.strip()]
+    lista_tipos = [t.strip().upper() for t in tipos.split(",") if t.strip()]
 
     return {
         "buscaGeral": busca,
@@ -358,7 +358,7 @@ def gerar_relatorio_precedentes(
             "",
             f"**Busca realizada:** `{busca}`",
             f"**Data/Hora:** {data_hora}",
-            f"**Total de resultados:** {len(precedentes)}",
+            f"**Total de resultados:** {data.get('total', len(precedentes))} (exibindo {len(precedentes)})",
             "",
             "---",
             "",
