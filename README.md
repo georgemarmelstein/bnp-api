@@ -75,7 +75,9 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 1. Abra o Claude Desktop
 2. Va em **Settings > Developer > Edit Config**
-3. Adicione a configuracao abaixo ao arquivo `claude_desktop_config.json`:
+3. Adicione a configuracao abaixo ao arquivo `claude_desktop_config.json`
+
+**macOS / Linux:**
 
 ```json
 {
@@ -88,19 +90,28 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 }
 ```
 
-4. Feche completamente e reinicie o Claude Desktop
+**Windows:**
 
-> **Nota:** Quando o pacote estiver publicado no PyPI, a configuracao simplifica para:
-> ```json
-> {
->   "mcpServers": {
->     "bnp-api": {
->       "command": "uvx",
->       "args": ["bnp-api"]
->     }
->   }
-> }
-> ```
+No Windows, o Claude Desktop pode nao encontrar `uvx` no PATH. Use o **caminho absoluto** do executavel. Para descobrir o caminho, abra o PowerShell e execute:
+
+```powershell
+(Get-Command uvx).Source
+```
+
+Depois use o resultado na configuracao (troque as barras por `\\`):
+
+```json
+{
+  "mcpServers": {
+    "bnp-api": {
+      "command": "C:\\Users\\SEU_USUARIO\\...\\uvx.exe",
+      "args": ["--from", "git+https://github.com/georgemarmelstein/bnp-api.git", "bnp-api"]
+    }
+  }
+}
+```
+
+4. Feche completamente e reinicie o Claude Desktop
 
 **Localizacao do arquivo de configuracao:**
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -171,12 +182,15 @@ uv --version
 # Se nao estiver, instalar:
 irm https://astral.sh/uv/install.ps1 | iex
 
-# 2. Ler config existente, fazer merge, salvar
+# 2. Descobrir caminho absoluto do uvx (CRITICO no Windows)
+$uvxPath = (Get-Command uvx).Source
+
+# 3. Ler config existente, fazer merge, salvar
 $configPath = "$env:APPDATA\Claude\claude_desktop_config.json"
 $config = if (Test-Path $configPath) { Get-Content $configPath -Raw | ConvertFrom-Json } else { [PSCustomObject]@{} }
 if (-not $config.mcpServers) { $config | Add-Member -NotePropertyName "mcpServers" -NotePropertyValue ([PSCustomObject]@{}) }
 $config.mcpServers | Add-Member -NotePropertyName "bnp-api" -NotePropertyValue ([PSCustomObject]@{
-    command = "uvx"
+    command = $uvxPath
     args = @("--from", "git+https://github.com/georgemarmelstein/bnp-api.git", "bnp-api")
 }) -Force
 # IMPORTANTE: Salvar sem BOM (UTF-8 puro) - Claude Desktop nao aceita BOM
@@ -217,6 +231,8 @@ with open(path, 'w') as f: json.dump(config, f, indent=2)
 ```
 
 **Pontos criticos para o agente:**
+- **Windows: use caminho absoluto do uvx.** O Claude Desktop nao herda o PATH do terminal. Descubra com `(Get-Command uvx).Source` e use o resultado no campo `command`.
+- **Windows: grave sem BOM.** Use `UTF8Encoding($false)` em vez de `Set-Content -Encoding UTF8`.
 - O `claude_desktop_config.json` pode ja ter outros servidores MCP. **Nunca sobrescreva** o arquivo inteiro — faca merge no campo `mcpServers`.
 - Apos modificar o arquivo, o usuario precisa **fechar e reiniciar** o Claude Desktop para que o novo servidor seja carregado.
 - O servidor comunica via **stdio** (stdin/stdout). Nao e necessario abrir portas ou configurar rede.

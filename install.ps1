@@ -61,8 +61,11 @@ if (-not $config.mcpServers) {
     $config | Add-Member -NotePropertyName "mcpServers" -NotePropertyValue ([PSCustomObject]@{})
 }
 
+# Usar caminho absoluto do uvx (Claude Desktop pode nao encontrar no PATH)
+$uvxFullPath = (Get-Command uvx).Source
+
 $serverConfig = [PSCustomObject]@{
-    command = "uvx"
+    command = $uvxFullPath
     args = @("--from", $REPO_URL, $SERVER_NAME)
 }
 

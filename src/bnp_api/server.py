@@ -241,58 +241,111 @@ def buscar_precedentes(
     Busca precedentes vinculantes no Banco Nacional de Precedentes (BNP/PAGEA).
     Retorna Repercussao Geral, Recursos Repetitivos, Sumulas Vinculantes e IRDRs.
 
-    IMPORTANTE - SINTAXE DO BNP:
-    O BNP usa sintaxe DIFERENTE dos outros sistemas. NAO use "E", "OU", "NAO" como operadores.
+    ================================================================
+    SINTAXE DO BNP (DIFERENTE de outros sistemas juridicos!)
+    ================================================================
 
     OPERADORES ACEITOS:
     +termo  = Palavra OBRIGATORIA (equivale a AND)
     -termo  = Palavra EXCLUIDA (equivale a NOT)
     "frase" = Expressao EXATA entre aspas
 
-    ESTRATEGIA DE BUSCA - SIGA ESTES PASSOS:
-    1. Verifique se existe TEMA VINCULANTE conhecido (ex: Tema 1066, Tema 709)
-       Se sim, busque diretamente: "tema 1066"
-    2. Identifique o INSTITUTO JURIDICO central (nao a pergunta inteira)
-    3. Use termos TECNICOS, nao linguagem coloquial
-    4. Adicione + para termos obrigatorios
-    5. Use - para excluir contextos indesejados
+    NAO FUNCIONAM: E, OU, NAO, AND, OR, NOT, ADJ, PROX
 
-    EXEMPLOS DE TRANSFORMACAO (pergunta -> query):
-    - "Pensao por morte para companheiro homoafetivo"
-      Ruim:  pensao por morte para companheiro homoafetivo
-      Boa:   +"pensao" +"morte" +homoafetivo
-      Melhor: "pensao por morte" +homoafetivo
+    ================================================================
+    ESTRATEGIA DE BUSCA PROGRESSIVA (OBRIGATORIA)
+    ================================================================
 
-    - "Aposentadoria especial com uso de EPI"
-      Ruim:  aposentadoria especial com uso de EPI neutraliza
-      Boa:   +"aposentadoria" +"especial" +EPI
+    REGRA DE OURO: Faca ate 3 buscas com estrategias diferentes antes
+    de concluir que nao ha precedentes! Use esta sequencia:
 
-    - "Servidor pode acumular aposentadorias?"
-      Ruim:  servidor pode acumular aposentadorias
-      Boa:   +acumulacao +aposentadoria +servidor -militar
+    BUSCA 1 - Direta (se numero de tema conhecido):
+      "tema 1066"
+      +sumula +111 +STJ
 
-    - "Qual o tema do STF sobre teto previdenciario?"
-      Direta: "tema 1066"
-      Alternativa: +teto +previdenciario +"revisao"
+    BUSCA 2 - Instituto juridico especifico (multiplos termos):
+      +aposentadoria +especial +ruido +EPI
+      +ICMS +"base de calculo" +PIS +COFINS
+      +perse +cadastur +beneficio
 
-    TERMOS TECNICOS - USE EM VEZ DE LINGUAGEM COLOQUIAL:
-    aposentar por doenca       -> aposentadoria por invalidez
-    auxilio do INSS            -> beneficio previdenciario
-    pensao da viuva            -> pensao por morte
-    dinheiro para deficiente   -> BPC, LOAS, beneficio assistencial
-    tempo de roca              -> atividade rural, segurado especial
-    revisar aposentadoria      -> revisao de beneficio
-    cortar beneficio           -> cessacao, cancelamento
+    BUSCA 3 - Mais ampla (reduzir termos):
+      +aposentadoria +especial +EPI
+      +ICMS +"base de calculo"
 
-    O QUE EVITAR:
-    - Operadores E, OU, NAO (nao funcionam nesta base)
-    - Frases completas como query
-    - Artigos e preposicoes (de, para, o, a, com)
-    - Queries muito longas (max 4-5 termos significativos)
+    BUSCA 4 - Generica (ultimo recurso):
+      +previdenciario +aposentadoria
+      +tributario +ICMS
+
+    ================================================================
+    COMO TRANSFORMAR PERGUNTAS EM QUERIES
+    ================================================================
+
+    1. Identifique o INSTITUTO JURIDICO central (nao a pergunta inteira)
+    2. Use termos TECNICOS (veja tabela abaixo)
+    3. Adicione + para termos obrigatorios
+    4. Use - para excluir contextos indesejados
+    5. Maximo 4-5 termos significativos
+
+    Exemplos:
+    - "Pensao por morte homoafetivo"   -> "pensao por morte" +homoafetivo
+    - "Aposentadoria especial EPI"     -> +"aposentadoria" +"especial" +EPI
+    - "Servidor acumular aposentadoria"-> +acumulacao +aposentadoria +servidor
+    - "Teto previdenciario STF"        -> "tema 1066"
+
+    TERMOS TECNICOS (traduza linguagem coloquial):
+    aposentar por doenca     -> aposentadoria por invalidez
+    auxilio do INSS          -> beneficio previdenciario
+    pensao da viuva          -> pensao por morte
+    dinheiro para deficiente -> BPC, LOAS, beneficio assistencial
+    tempo de roca            -> atividade rural, segurado especial
+    revisar aposentadoria    -> revisao de beneficio
+    cortar beneficio         -> cessacao, cancelamento
+
+    ================================================================
+    MAPEAMENTO POR MATERIA (termos sugeridos)
+    ================================================================
+
+    Aposentadoria especial: +aposentadoria +especial, +atividade +especial +EPI
+    BPC/LOAS:               +BPC +LOAS, +beneficio +assistencial +miserabilidade
+    Pensao por morte:       +"pensao" +"morte" +dependente +qualidade
+    Auxilio-doenca:         +auxilio +doenca +incapacidade
+    ICMS base de calculo:   +ICMS +"base de calculo", +exclusao +ICMS +PIS +COFINS
+    Honorarios:             +honorarios +fazenda +sucumbencia
+    Juros e correcao:       +juros +correcao +monetaria +fazenda
+    Servidor publico:       +servidor +publico, +decadencia +administracao
+    Prescricao TCU:         +prescricao +TCU +ressarcimento +erario
+    PERSE/CADASTUR:         +perse +cadastur, +setor +eventos +beneficio
+
+    ================================================================
+    HIERARQUIA DE PRECEDENTES (priorize nesta ordem)
+    ================================================================
+
+    1. RG (Repercussao Geral STF) - Vinculante erga omnes
+    2. RR (Recurso Repetitivo STJ) - Vinculante
+    3. SV (Sumula Vinculante STF)  - Vinculante
+    4. SUM (Sumula STF/STJ)        - Altamente persuasivo
+    5. IRDR/IAC                    - Persuasivo regional
+
+    ATENCAO A SITUACAO DO PRECEDENTE:
+    - Julgado: Tese firmada e aplicavel
+    - Pendente: SEM tese firmada, processos podem estar sobrestados
+    - Afetado: Em julgamento pelo tribunal
+    Se encontrar tema PENDENTE, alerte o usuario.
+
+    ================================================================
+    ARMADILHAS COMUNS
+    ================================================================
+
+    - Busca generica retorna tema diferente do esperado
+      -> Complemente com termos descritivos alem do numero
+    - Multiplos temas para o mesmo assunto
+      -> Faca multiplas buscas com variacoes de termos
+    - Tema com modulacao temporal
+      -> Verifique e informe no relatorio
 
     Args:
         busca: Query com sintaxe BNP (+termo, -termo, "frase").
-               NAO passe perguntas diretas. Use a estrategia acima.
+               NAO passe perguntas diretas. Extraia termos tecnicos.
         orgaos: Orgaos separados por virgula. Default: "STF,STJ"
                 Opcoes: STF, STJ, TST, TSE, STM, TRFs, TJs
         tipos: Tipos de precedente. Default: "RG,RR,SV,SUM"
@@ -333,9 +386,21 @@ def gerar_relatorio_precedentes(
     Para analise programatica, prefira buscar_precedentes que retorna XML.
 
     A sintaxe de busca e a MESMA de buscar_precedentes:
-    - +termo para obrigatorio
-    - -termo para excluir
+    - +termo para obrigatorio (AND)
+    - -termo para excluir (NOT)
     - "frase" para expressao exata
+    - NAO use: E, OU, NAO, AND, OR, NOT
+
+    ESTRATEGIA: Faca ate 3 buscas progressivas antes de desistir.
+    Veja a docstring completa de buscar_precedentes para detalhes
+    sobre sintaxe, estrategia progressiva e mapeamento por materia.
+
+    APOS RECEBER O RELATORIO:
+    - Verifique a SITUACAO de cada precedente (Julgado/Pendente)
+    - Transcreva teses EXATAS quando disponveis (nao parafraseie)
+    - Priorize RG e RR sobre sumulas simples
+    - Se encontrar tema PENDENTE, alerte o usuario
+    - Se nao encontrar nada, sugira termos alternativos
 
     Args:
         busca: Query com sintaxe BNP. Veja buscar_precedentes para detalhes.
