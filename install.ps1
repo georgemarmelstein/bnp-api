@@ -74,9 +74,10 @@ if ($config.mcpServers.PSObject.Properties.Name -contains $SERVER_NAME) {
     Write-Host "  Servidor '$SERVER_NAME' adicionado." -ForegroundColor Green
 }
 
-# Salvar
+# Salvar (UTF-8 SEM BOM - critico para o Claude Desktop)
 $jsonOutput = $config | ConvertTo-Json -Depth 10
-[System.IO.File]::WriteAllText($CONFIG_PATH, $jsonOutput, [System.Text.Encoding]::UTF8)
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($CONFIG_PATH, $jsonOutput, $utf8NoBom)
 Write-Host "  Config salva em: $CONFIG_PATH" -ForegroundColor Green
 
 # 4. Resultado

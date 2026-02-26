@@ -179,10 +179,15 @@ $config.mcpServers | Add-Member -NotePropertyName "bnp-api" -NotePropertyValue (
     command = "uvx"
     args = @("--from", "git+https://github.com/georgemarmelstein/bnp-api.git", "bnp-api")
 }) -Force
-$config | ConvertTo-Json -Depth 10 | Set-Content $configPath -Encoding UTF8
+# IMPORTANTE: Salvar sem BOM (UTF-8 puro) - Claude Desktop nao aceita BOM
+$json = $config | ConvertTo-Json -Depth 10
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($configPath, $json, $utf8NoBom)
 
 # 3. Informar que precisa reiniciar o Claude Desktop
 ```
+
+> **Atencao:** No Windows PowerShell 5.x, `Set-Content -Encoding UTF8` grava com BOM (Byte Order Mark), que causa erro `Unexpected token` no Claude Desktop. Use sempre `[System.IO.File]::WriteAllText()` com `UTF8Encoding($false)`.
 
 **macOS/Linux (bash):**
 
